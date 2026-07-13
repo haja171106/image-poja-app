@@ -37,7 +37,9 @@ public class ImageBwConversionRequestedService implements Consumer<ImageBwConver
             .orElseThrow(
                 () -> new IllegalStateException("Image introuvable, id: " + event.getImageId()));
 
-    var originalFile = bucketComponent.download(ImageFileUtil.originalKey(image.getId()));
+    var originalFile =
+        bucketComponent.download(
+            ImageFileUtil.originalKey(image.getId(), savedDomain.getFilename()));
 
     var originalImage = ImageIO.read(originalFile);
     var bwImage =

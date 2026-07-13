@@ -12,7 +12,7 @@ public final class ImageFileUtil {
     return contentType != null && ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase());
   }
 
-  public static String originalKey(Long imageId) {
+  public static String originalKey(Long imageId, String filename) {
     return "original/" + imageId;
   }
 
