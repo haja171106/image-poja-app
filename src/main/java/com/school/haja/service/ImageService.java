@@ -36,19 +36,23 @@ public class ImageService {
 
     // 1. Enregistrement synchrone en base (id généré par la DB)
     var domainToSave =
-            Image.builder().filename(file.getOriginalFilename()).email(email).createdAt(Instant.now()).build();
+        Image.builder()
+            .filename(file.getOriginalFilename())
+            .email(email)
+            .createdAt(Instant.now())
+            .build();
     var savedEntity = imageRepository.save(JImage.fromDomain(domainToSave));
     var savedDomain = savedEntity.toDomain();
 
     // 2. Upload synchrone de l'image originale sur S3
     var tempFile = toTempFile(file);
     bucketComponent.upload(
-            tempFile, ImageFileUtil.originalKey(savedDomain.getId(), savedDomain.getFilename()));
+        tempFile, ImageFileUtil.originalKey(savedDomain.getId(), savedDomain.getFilename()));
     Files.deleteIfExists(tempFile.toPath());
 
     // 3. Déclenchement du traitement asynchrone (conversion N&B + email)
     eventProducer.accept(
-            List.of(ImageBwConversionRequested.builder().imageId(savedDomain.getId()).build()));
+        List.of(ImageBwConversionRequested.builder().imageId(savedDomain.getId()).build()));
 
     return ImageDto.from(savedDomain);
   }
