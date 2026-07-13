@@ -1,6 +1,7 @@
 package com.school.haja.endpoint.event.model;
 
 import java.time.Duration;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +9,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-// NB: PojaEvent est déjà généré par Poja dans ce même package (endpoint.event.model).
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
@@ -17,7 +17,7 @@ import lombok.ToString;
 @ToString
 public class ImageBwConversionRequested extends PojaEvent {
 
-  private Long imageId;
+  private UUID imageId;
 
   @Override
   public Duration maxConsumerDuration() {
