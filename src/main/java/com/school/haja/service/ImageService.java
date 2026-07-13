@@ -4,6 +4,7 @@ import com.school.haja.endpoint.event.EventProducer;
 import com.school.haja.endpoint.event.model.ImageBwConversionRequested;
 import com.school.haja.endpoint.rest.dto.ImageDto;
 import com.school.haja.endpoint.rest.exception.UnsupportedImageFormatException;
+import com.school.haja.entity.Image;
 import com.school.haja.file.bucket.BucketComponent;
 import com.school.haja.repository.ImageRepository;
 import com.school.haja.repository.model.JImage;
@@ -33,26 +34,27 @@ public class ImageService {
       throw new UnsupportedImageFormatException(contentType);
     }
 
-    var entity =
-        imageRepository.save(
-            JImage.builder()
-                .filename(file.getOriginalFilename())
-                .email(email)
-                .createdAt(Instant.now())
-                .build());
+    // 1. Enregistrement synchrone en base (id généré par la DB)
+    var domainToSave =
+            Image.builder().filename(file.getOriginalFilename()).email(email).createdAt(Instant.now()).build();
+    var savedEntity = imageRepository.save(JImage.fromDomain(domainToSave));
+    var savedDomain = savedEntity.toDomain();
 
+    // 2. Upload synchrone de l'image originale sur S3
     var tempFile = toTempFile(file);
-    bucketComponent.upload(tempFile, ImageFileUtil.originalKey(entity.getId()));
+    bucketComponent.upload(
+            tempFile, ImageFileUtil.originalKey(savedDomain.getId(), savedDomain.getFilename()));
     Files.deleteIfExists(tempFile.toPath());
 
+    // 3. Déclenchement du traitement asynchrone (conversion N&B + email)
     eventProducer.accept(
-        List.of(ImageBwConversionRequested.builder().imageId(entity.getId()).build()));
+            List.of(ImageBwConversionRequested.builder().imageId(savedDomain.getId()).build()));
 
-    return ImageDto.from(entity.toDomain());
+    return ImageDto.from(savedDomain);
   }
 
   public List<ImageDto> findAll() {
-    return imageRepository.findAll().stream().map(ImageDto::from).toList();
+    return imageRepository.findAll().stream().map(JImage::toDomain).map(ImageDto::from).toList();
   }
 
   private File toTempFile(MultipartFile file) throws IOException {
