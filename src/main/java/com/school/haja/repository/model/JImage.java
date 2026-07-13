@@ -1,8 +1,7 @@
 package com.school.haja.repository.model;
 
 import com.school.haja.entity.Image;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
